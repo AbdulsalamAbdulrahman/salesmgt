@@ -11,7 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PurchaseOrder extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'order_number',
@@ -35,11 +35,17 @@ class PurchaseOrder extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_ORDERED = 'ordered';
+
     const STATUS_DELIVERED = 'delivered';
+
     const STATUS_CANCELLED = 'cancelled';
 
     public function getActivitylogOptions(): LogOptions
@@ -56,7 +62,7 @@ class PurchaseOrder extends Model
 
         static::creating(function ($order) {
             if (empty($order->order_number)) {
-                $order->order_number = 'PO-' . date('Ymd') . '-' . str_pad(static::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
+                $order->order_number = 'PO-'.date('Ymd').'-'.str_pad(static::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
             }
         });
     }
@@ -138,7 +144,7 @@ class PurchaseOrder extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'yellow',
             self::STATUS_APPROVED => 'blue',
             self::STATUS_REJECTED => 'red',
@@ -206,9 +212,16 @@ class PurchaseOrder extends Model
         ]);
 
         // Update inventory stock for each item
+        $this->loadMissing('items.product');
         foreach ($this->items as $item) {
             $deliveredQty = $item->delivered_quantity ?? $item->approved_quantity ?? $item->requested_quantity;
-            
+
+            // Multiply by qty_per_unit for pack-based products (e.g. a pack of 12 adds 12 to stock)
+            $qtyPerUnit = $item->product->qty_per_unit ?? 1;
+            if ($qtyPerUnit > 1) {
+                $deliveredQty *= $qtyPerUnit;
+            }
+
             $stock = InventoryStock::firstOrCreate(
                 [
                     'product_id' => $item->product_id,
@@ -230,7 +243,7 @@ class PurchaseOrder extends Model
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $stock->quantity,
                 'reference' => $this->order_number,
-                'notes' => 'Stock received from Purchase Order: ' . $this->order_number,
+                'notes' => 'Stock received from Purchase Order: '.$this->order_number,
             ]);
         }
     }

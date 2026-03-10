@@ -34,7 +34,7 @@
             </div>
             
             @if(in_array(auth()->user()->role, ['admin', 'cashier']))
-            <button wire:click="createOrder" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition-colors">
+            <button x-data @click="$dispatch('open-create-modal')" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -88,25 +88,29 @@
                             {{ $order->created_at->format('M d, Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <button wire:click="viewOrder({{ $order->id }})" class="text-brand-500 hover:text-brand-700">
-                                View
+                            <button wire:click="viewOrder({{ $order->id }})" wire:loading.attr="disabled" wire:target="viewOrder({{ $order->id }})" class="text-brand-500 hover:text-brand-700 disabled:opacity-50">
+                                <span wire:loading.remove wire:target="viewOrder({{ $order->id }})">View</span>
+                                <span wire:loading wire:target="viewOrder({{ $order->id }})">Loading...</span>
                             </button>
-                            
+
                             @if(auth()->user()->role === 'admin' && $order->status === 'pending')
-                                <button wire:click="openApprovalModal({{ $order->id }})" class="text-green-600 hover:text-green-900">
-                                    Review
+                                <button wire:click="openApprovalModal({{ $order->id }})" wire:loading.attr="disabled" wire:target="openApprovalModal({{ $order->id }})" class="text-green-600 hover:text-green-900 disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="openApprovalModal({{ $order->id }})">Review</span>
+                                    <span wire:loading wire:target="openApprovalModal({{ $order->id }})">Loading...</span>
                                 </button>
                             @endif
-                            
+
                             @if(auth()->user()->role === 'supplier' && $order->status === 'approved')
-                                <button wire:click="openSendModal({{ $order->id }})" class="text-purple-600 hover:text-purple-900">
-                                    Mark as Sent
+                                <button wire:click="openSendModal({{ $order->id }})" wire:loading.attr="disabled" wire:target="openSendModal({{ $order->id }})" class="text-purple-600 hover:text-purple-900 disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="openSendModal({{ $order->id }})">Mark as Sent</span>
+                                    <span wire:loading wire:target="openSendModal({{ $order->id }})">Loading...</span>
                                 </button>
                             @endif
-                            
+
                             @if(in_array(auth()->user()->role, ['admin', 'cashier']) && in_array($order->status, ['approved', 'sent', 'ordered']))
-                                <button wire:click="openDeliveryModal({{ $order->id }})" class="text-brand-500 hover:text-brand-700">
-                                    Receive
+                                <button wire:click="openDeliveryModal({{ $order->id }})" wire:loading.attr="disabled" wire:target="openDeliveryModal({{ $order->id }})" class="text-brand-500 hover:text-brand-700 disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="openDeliveryModal({{ $order->id }})">Receive</span>
+                                    <span wire:loading wire:target="openDeliveryModal({{ $order->id }})">Loading...</span>
                                 </button>
                             @endif
 
@@ -201,13 +205,34 @@
     @endif
 
     <!-- Create Order Modal - Alpine.js powered for client-side calculations -->
-    @if($showCreateModal)
+    @if(in_array(auth()->user()->role, ['admin', 'cashier']))
     <div class="fixed inset-0 z-50 overflow-y-auto"
          x-data="{
-            items: @js($orderItems),
-            products: @js($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'cost_price' => $p->cost_price, 'low_stock_threshold' => $p->low_stock_threshold, 'unit_type' => $p->unit_type ?? 'piece', 'qty_per_unit' => $p->qty_per_unit ?? 1])),
-            location_id: @js($location_id ?? ''),
+            open: false,
+            items: [],
+            products: @js($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'cost_price' => $p->cost_price, 'low_stock_threshold' => $p->low_stock_threshold, 'unit_type' => $p->unit_type ?? 'piece', 'qty_per_unit' => $p->qty_per_unit ?? 1, 'stock' => $p->inventory_stocks_sum_quantity ?? 0])),
+            location_id: @js(auth()->user()->location_id ?? ''),
             notes: '',
+            initLowStockItems() {
+                this.items = [];
+                this.notes = '';
+                this.location_id = '{{ auth()->user()->location_id ?? '' }}';
+                this.products.filter(p => (p.stock ?? 0) <= p.low_stock_threshold).forEach(p => {
+                    const currentStock = p.stock ?? 0;
+                    const suggestedQty = Math.max((p.low_stock_threshold * 2) - currentStock, 10);
+                    this.items.push({
+                        product_id: p.id,
+                        product_name: p.name,
+                        current_stock: currentStock,
+                        threshold: p.low_stock_threshold,
+                        cost_price: p.cost_price,
+                        quantity: suggestedQty,
+                        unit_type: p.unit_type ?? 'piece',
+                        qty_per_unit: p.qty_per_unit ?? 1,
+                        selected: true
+                    });
+                });
+            },
             formatCurrency(amount) {
                 return new Intl.NumberFormat('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
             },
@@ -261,19 +286,19 @@
             },
             selectProduct(index, productId) {
                 if (!productId) return;
-                
-                // Check if product is already added
+
                 if (this.isProductAlreadyAdded(productId)) {
                     alert('This product has already been added to the order.');
                     return;
                 }
-                
+
                 const product = this.products.find(p => p.id == productId);
                 if (product) {
                     this.items[index].product_id = product.id;
                     this.items[index].product_name = product.name;
                     this.items[index].cost_price = product.cost_price || 0;
                     this.items[index].threshold = product.low_stock_threshold || 0;
+                    this.items[index].current_stock = product.stock ?? 0;
                     this.items[index].unit_type = product.unit_type || 'piece';
                     this.items[index].qty_per_unit = product.qty_per_unit || 1;
                 }
@@ -288,7 +313,6 @@
                     alert('Please select a location for this order.');
                     return;
                 }
-                // Update Livewire state and submit - wait for all sets to complete
                 Promise.all([
                     $wire.set('orderItems', this.items),
                     $wire.set('location_id', this.location_id),
@@ -297,18 +321,37 @@
                     $wire.submitOrder();
                 });
             }
-         }">
+         }"
+         x-show="open"
+         x-cloak
+         @open-create-modal.window="open = true; initLowStockItems()"
+         @close-create-modal.window="open = false">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" wire:click="$set('showCreateModal', false)"></div>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+                 @click="open = false"></div>
 
-            <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto transform transition-all max-h-[90vh] overflow-hidden flex flex-col">
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto transform transition-all max-h-[90vh] overflow-hidden flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900">Create Purchase Order</h3>
                             <p class="text-sm text-gray-500">Order products that are low on stock</p>
                         </div>
-                        <button wire:click="$set('showCreateModal', false)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <button @click="open = false" class="text-gray-400 hover:text-gray-600 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -448,7 +491,7 @@
                 </div>
 
                 <div class="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end space-x-3">
-                    <button wire:click="$set('showCreateModal', false)" type="button"
+                    <button @click="open = false" type="button"
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                         Cancel
                     </button>
@@ -785,7 +828,7 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
-                 @click="$wire.set('showCancelModal', false)"></div>
+                 @click="open = false"></div>
 
             <!-- Modal Panel -->
             <div x-show="open"
@@ -806,7 +849,7 @@
                     <p class="text-gray-500 text-center mb-6">Are you sure you want to cancel this purchase order? This action cannot be undone.</p>
                     
                     <div class="flex justify-center space-x-3">
-                        <button wire:click="$set('showCancelModal', false)" 
+                        <button @click="open = false"
                                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                             No, Keep Order
                         </button>
