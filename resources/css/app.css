@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    
+    /* Brand colors */
+    --color-brand-50: #e8e6f5;
+    --color-brand-100: #d1ccea;
+    --color-brand-200: #a399d5;
+    --color-brand-300: #7566c0;
+    --color-brand-400: #4733ab;
+    --color-brand-500: #1f1671;
+    --color-brand-600: #1b135f;
+    --color-brand-700: #160f4d;
+    --color-brand-800: #110c3b;
+    --color-brand-900: #0c0829;
+    
+    /* Animations */
+    --animate-fade-in: fade-in 0.3s ease-out;
+    --animate-slide-up: slide-up 0.3s ease-out;
+    --animate-scale-in: scale-in 0.2s ease-out;
+}
+
+/* Custom Animations */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Alpine.js x-cloak - hide elements until Alpine initializes */
+[x-cloak] {
+    display: none !important;
+}

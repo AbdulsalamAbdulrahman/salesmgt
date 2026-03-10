@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - SalesMgt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .pending-info {
+            margin-top: 32px;
+            padding: 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"/>
+        </svg>
+        
+        <h1>You're Offline</h1>
+        <p>Don't worry! Your pending transactions are saved locally and will sync automatically when you're back online.</p>
+        
+        <a href="javascript:location.reload()" class="btn">Try Again</a>
+        
+        <div class="pending-info" id="pendingInfo" style="display: none;">
+            <strong id="pendingCount">0</strong> transaction(s) waiting to sync
+        </div>
+    </div>
+
+    <script>
+        // Check for pending transactions
+        const DB_NAME = 'salesmgt_offline';
+        const STORE_NAME = 'pending_transactions';
+        
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onsuccess = () => {
+            const db = request.result;
+            try {
+                const tx = db.transaction([STORE_NAME], 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const countRequest = store.count();
+                
+                countRequest.onsuccess = () => {
+                    const count = countRequest.result;
+                    if (count > 0) {
+                        document.getElementById('pendingCount').textContent = count;
+                        document.getElementById('pendingInfo').style.display = 'block';
+                    }
+                };
+            } catch (e) {
+                // Store may not exist yet
+            }
+        };
+
+        // Auto-reload when back online
+        window.addEventListener('online', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

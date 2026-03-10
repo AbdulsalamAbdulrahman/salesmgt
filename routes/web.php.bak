@@ -1,0 +1,47 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Livewire\Auth\Login;
+use App\Livewire\Dashboard;
+use App\Livewire\Products\ProductIndex;
+use App\Livewire\Sales\SaleIndex;
+use App\Livewire\Sales\CreateSale;
+use App\Livewire\Inventory\InventoryIndex;
+use App\Livewire\Reports\ReportIndex;
+use Illuminate\Support\Facades\Auth;
+
+// Guest routes
+Route::middleware('guest')->group(function () {
+    Route::get('/', Login::class)->name('login');
+});
+
+// Authenticated routes
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    
+    // Products
+    Route::get('/products', ProductIndex::class)->name('products.index')
+        ->middleware('can:manage-products');
+    
+    // Sales
+    Route::get('/sales', SaleIndex::class)->name('sales.index')
+        ->middleware('can:view-sales');
+    Route::get('/sales/create', CreateSale::class)->name('sales.create')
+        ->middleware('can:create-sales');
+    
+    // Inventory
+    Route::get('/inventory', InventoryIndex::class)->name('inventory.index')
+        ->middleware('can:manage-inventory');
+    
+    // Reports
+    Route::get('/reports', ReportIndex::class)->name('reports.index')
+        ->middleware('can:view-reports');
+    
+    // Logout
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout');
+});
