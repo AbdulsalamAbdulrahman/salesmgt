@@ -41,6 +41,7 @@ class Expense extends Model
         'delivery' => 'Product Delivery Fee',
         'repairs' => 'Repairs',
         'miscellaneous' => 'Miscellaneous',
+        'other' => 'Other',
     ];
 
     public function getActivitylogOptions(): LogOptions

@@ -4,7 +4,9 @@
         "copilot"
     ],
     "editors": [
+        "claude_code",
         "vscode"
     ],
-    "guidelines": []
+    "guidelines": [],
+    "herd_mcp": true
 }

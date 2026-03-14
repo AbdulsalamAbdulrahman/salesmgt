@@ -13,7 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivity;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -154,5 +154,13 @@ class User extends Authenticatable
     public function isSupplier(): bool
     {
         return $this->role === 'supplier';
+    }
+
+    /**
+     * Check if user is a simple shop manager
+     */
+    public function isShopManager(): bool
+    {
+        return $this->role === 'shop_manager';
     }
 }

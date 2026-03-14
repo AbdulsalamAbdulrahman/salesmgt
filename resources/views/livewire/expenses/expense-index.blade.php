@@ -63,6 +63,9 @@
                     if (!this.form.category) {
                         this.errors.category = 'Category is required';
                     }
+                    if (this.form.category === 'other' && !this.form.description) {
+                        this.errors.description = 'Description is required when category is Other';
+                    }
                     if (!this.form.amount || parseFloat(this.form.amount) <= 0) {
                         this.errors.amount = 'Amount must be greater than 0';
                     }
@@ -370,6 +373,13 @@
                             <span x-show="errors.category" class="text-red-500 text-sm mt-1 block" x-text="errors.category"></span>
                         </div>
 
+                        <div x-show="form.category === 'other'" x-cloak>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Specify Expense *</label>
+                            <input x-model="form.description" type="text" placeholder="Describe the expense..."
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                            <span x-show="errors.description" class="text-red-500 text-sm mt-1 block" x-text="errors.description"></span>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₦) *</label>
                             <input x-data="{
@@ -434,7 +444,7 @@
                             </select>
                         </div>
                         
-                        <div>
+                        <div x-show="form.category !== 'other'">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                             <textarea x-model="form.description" rows="3" placeholder="Optional details about this expense..."
                                       class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
@@ -515,7 +525,7 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                            <select wire:model="category" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                            <select wire:model.live="category" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                                 <option value="">Select Category</option>
                                 @foreach($categories as $key => $label)
                                     <option value="{{ $key }}">{{ $label }}</option>
@@ -523,6 +533,15 @@
                             </select>
                             @error('category') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        @if($category === 'other')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Specify Expense *</label>
+                            <input wire:model="description" type="text" placeholder="Describe the expense..."
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                            @error('description') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                        @endif
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₦) *</label>
@@ -574,12 +593,14 @@
                             @error('location_id') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
                         
+                        @if($category !== 'other')
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                             <textarea wire:model="description" rows="3" placeholder="Optional details about this expense..."
                                       class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
                             @error('description') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
+                        @endif
                     </div>
                     
                     <div class="flex gap-3 mt-6">

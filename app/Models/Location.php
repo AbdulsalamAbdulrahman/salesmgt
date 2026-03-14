@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Location extends Model
 {
@@ -15,16 +15,18 @@ class Location extends Model
         'address',
         'phone',
         'is_active',
+        'is_simple_shop',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_simple_shop' => 'boolean',
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'address', 'phone', 'is_active'])
+            ->logOnly(['name', 'address', 'phone', 'is_active', 'is_simple_shop'])
             ->logOnlyDirty();
     }
 
@@ -46,6 +48,16 @@ class Location extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function dailyBalances()
+    {
+        return $this->hasMany(DailyBalance::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
     }
 
     public function scopeActive($query)

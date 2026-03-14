@@ -30,6 +30,7 @@
                     <option value="profit">💰 Profit Report</option>
                     <option value="staff">👥 Staff Summary</option>
                     <option value="stock">🏪 Stock Valuation</option>
+                    <option value="wife_shop">🏠 POSshop</option>
                 </select>
 
                 <!-- Date Range -->
@@ -230,6 +231,27 @@
         <p class="{{ $expectedProfit >= 0 ? 'text-green-100' : 'text-red-100' }} text-sm font-medium uppercase">Expected Profit (If All Stock Sold)</p>
         <p class="text-3xl font-bold mt-2">₦{{ number_format($expectedProfit, 0) }}</p>
         <p class="{{ $expectedProfit >= 0 ? 'text-green-200' : 'text-red-200' }} text-sm mt-1">Selling Value - Cost Value</p>
+    </div>
+    @elseif($reportType === 'wife_shop' && $wifeShopSummary)
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-gradient-to-br from-brand-400 to-brand-500 rounded-2xl p-4 text-white">
+            <p class="text-brand-100 text-xs font-medium uppercase">Total Days</p>
+            <p class="text-xl font-bold mt-1">{{ $wifeShopSummary->totalDays }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-4 text-white">
+            <p class="text-rose-100 text-xs font-medium uppercase">Total Expenses</p>
+            <p class="text-lg font-bold mt-1 break-all">₦{{ number_format($wifeShopSummary->totalExpenses, 0) }}</p>
+        </div>
+        <div class="bg-gradient-to-br {{ $wifeShopSummary->totalProfit >= 0 ? 'from-emerald-500 to-green-600' : 'from-red-500 to-rose-600' }} rounded-2xl p-4 text-white">
+            <p class="{{ $wifeShopSummary->totalProfit >= 0 ? 'text-green-100' : 'text-red-100' }} text-xs font-medium uppercase">Total Profit</p>
+            <p class="text-lg font-bold mt-1 break-all">₦{{ number_format($wifeShopSummary->totalProfit, 0) }}</p>
+            <p class="{{ $wifeShopSummary->totalProfit >= 0 ? 'text-green-200' : 'text-red-200' }} text-xs mt-1">Closing - Opening</p>
+        </div>
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
+            <p class="text-blue-100 text-xs font-medium uppercase">Total Txn</p>
+            <p class="text-lg font-bold mt-1 break-all">₦{{ number_format($wifeShopSummary->totalTxn, 0) }}</p>
+            <p class="text-blue-200 text-xs mt-1">Closing + Expenses</p>
+        </div>
     </div>
     @endif
 
@@ -587,6 +609,104 @@
                     @endif
                 </table>
             </div>
+        @elseif($reportType === 'wife_shop')
+            <!-- POSshop Daily Balances -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Opening</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Closing</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Expenses</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Profit</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Total Txn</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($reportData as $balance)
+                            @php
+                                $dayExpenses = $balance->day_expenses ?? 0;
+                                $dayProfit = $balance->closing_balance !== null
+                                    ? $balance->closing_balance - $balance->opening_balance
+                                    : null;
+                                $dayTxn = $balance->closing_balance !== null
+                                    ? $balance->closing_balance + $dayExpenses
+                                    : $dayExpenses;
+                            @endphp
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-800">{{ $balance->balance_date->format('M d, Y') }}</td>
+                                <td class="px-6 py-4 text-right text-gray-800">₦{{ number_format($balance->opening_balance, 0) }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    @if($balance->closing_balance !== null)
+                                        <span class="font-semibold text-gray-800">₦{{ number_format($balance->closing_balance, 0) }}</span>
+                                    @else
+                                        <span class="text-amber-500 text-sm italic">Pending</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-right font-semibold text-red-600">₦{{ number_format($dayExpenses, 0) }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    @if($dayProfit !== null)
+                                        <span class="font-bold {{ $dayProfit >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $dayProfit < 0 ? '-' : '' }}₦{{ number_format(abs($dayProfit), 0) }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-right font-semibold text-blue-600">₦{{ number_format($dayTxn, 0) }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ $balance->notes ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-16 text-center text-gray-500">
+                                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                    </svg>
+                                    No daily balance data found for the selected period
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- POSshop Expense Details -->
+            @if($wifeShopExpenses->isNotEmpty())
+            <div class="border-t border-gray-100 mt-2">
+                <div class="px-6 py-4 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-800">Expense Details</h3>
+                    <p class="text-sm text-gray-500">Individual expenses for the selected period</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($wifeShopExpenses as $expense)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-3 text-sm text-gray-600">{{ $expense->expense_date->format('M d, Y') }}</td>
+                                    <td class="px-6 py-3 text-sm text-gray-800">{{ $expense->description }}</td>
+                                    <td class="px-6 py-3 text-right font-semibold text-red-600">₦{{ number_format($expense->amount, 0) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+                            <tr>
+                                <td colspan="2" class="px-6 py-3 font-bold text-gray-800">Total Expenses</td>
+                                <td class="px-6 py-3 text-right font-bold text-red-600">₦{{ number_format($wifeShopExpenses->sum('amount'), 0) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            @endif
         @endif
     </div>
 </div>

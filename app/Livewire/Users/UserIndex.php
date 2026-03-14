@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Users;
 
-use App\Models\User;
 use App\Models\Location;
-use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
-use Livewire\WithPagination;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.app')]
 #[Title('Users')]
@@ -18,31 +18,46 @@ class UserIndex extends Component
     use WithPagination;
 
     public $search = '';
+
     public $showModal = false;
+
     public $editMode = false;
+
     public $userId;
-    
+
     public $name = '';
+
     public $email = '';
+
     public $phone = '';
+
     public $password = '';
+
     public $role = 'attendant';
+
     public $location_id = '';
+
     public $can_manage_inventory = false;
+
     public $is_active = true;
+
     public $address = '';
+
     public $salary = '';
+
     public $hire_date = '';
+
     public $emergency_contact = '';
+
     public $emergency_phone = '';
 
     protected function rules()
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email' . ($this->editMode ? ',' . $this->userId : ''),
+            'email' => 'required|email|max:255|unique:users,email'.($this->editMode ? ','.$this->userId : ''),
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,cashier,attendant,supplier',
+            'role' => 'required|in:admin,cashier,attendant,supplier,shop_manager',
             'location_id' => 'nullable|exists:locations,id',
             'can_manage_inventory' => 'boolean',
             'is_active' => 'boolean',
@@ -53,7 +68,7 @@ class UserIndex extends Component
             'emergency_phone' => 'nullable|string|max:20',
         ];
 
-        if (!$this->editMode) {
+        if (! $this->editMode) {
             $rules['password'] = 'required|string|min:8';
         } else {
             $rules['password'] = 'nullable|string|min:8';
@@ -136,10 +151,11 @@ class UserIndex extends Component
         // Don't allow deactivating yourself
         if ($user->id === Auth::id()) {
             session()->flash('error', 'You cannot deactivate your own account.');
+
             return;
         }
 
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
         session()->flash('message', 'User status updated successfully.');
     }
 
@@ -147,9 +163,9 @@ class UserIndex extends Component
     {
         $users = User::query()
             ->with('location')
-            ->when($this->search, function($q) {
+            ->when($this->search, function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%");
+                    ->orWhere('email', 'like', "%{$this->search}%");
             })
             ->orderBy('name')
             ->paginate(10);

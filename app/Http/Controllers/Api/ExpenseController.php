@@ -17,10 +17,10 @@ class ExpenseController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'category' => 'required|string|in:' . implode(',', array_keys(Expense::CATEGORIES)),
+            'category' => 'required|string|in:'.implode(',', array_keys(Expense::CATEGORIES)),
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|in:CASH,TRANSFER,CARD',
-            'description' => 'nullable|string|max:500',
+            'description' => $request->input('category') === 'other' ? 'required|string|max:500' : 'nullable|string|max:500',
             'expense_date' => 'required|date',
             'location_id' => 'nullable|integer|exists:locations,id',
             'offline_id' => 'nullable|string|max:50',
@@ -28,7 +28,7 @@ class ExpenseController extends Controller
         ]);
 
         // Check for duplicate offline submission
-        if (!empty($validated['offline_id'])) {
+        if (! empty($validated['offline_id'])) {
             $existingExpense = Expense::where('offline_id', $validated['offline_id'])->first();
             if ($existingExpense) {
                 return response()->json([
@@ -73,7 +73,7 @@ class ExpenseController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error recording expense: ' . $e->getMessage(),
+                'message' => 'Error recording expense: '.$e->getMessage(),
             ], 500);
         }
     }

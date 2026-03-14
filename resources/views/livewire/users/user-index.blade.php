@@ -65,6 +65,7 @@
                                     @case('admin') bg-purple-100 text-purple-800 @break
                                     @case('cashier') bg-blue-100 text-blue-800 @break
                                     @case('supplier') bg-orange-100 text-orange-800 @break
+                                    @case('shop_manager') bg-emerald-100 text-emerald-800 @break
                                     @default bg-brand-100 text-brand-700
                                 @endswitch
                             ">
@@ -207,6 +208,7 @@
                                     <option value="attendant">Attendant</option>
                                     <option value="cashier">Cashier</option>
                                     <option value="supplier">Supplier</option>
+                                    <option value="shop_manager">Shop Manager</option>
                                     <option value="admin">Admin</option>
                                 </select>
                                 @error('role') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
