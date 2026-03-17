@@ -24,161 +24,183 @@
 
     @livewireStyles
 </head>
-<body class="font-sans antialiased bg-gray-100" x-data="{ sidebarOpen: false }">
+<body class="font-sans antialiased bg-gray-100"
+      x-data="{ sidebarOpen: false, sidebarCollapsed: true, isDesktop: window.innerWidth >= 1024 }"
+      x-init="window.addEventListener('resize', () => { isDesktop = window.innerWidth >= 1024 })">
     
     <div class="min-h-screen flex">
         <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 transform transition-transform duration-200 ease-in-out lg:translate-x-0"
-               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-            <div class="flex items-center justify-center h-18 bg-gray-800 px-4 flex-shrink-0">
-                <img src="{{ asset('logo/logo_2.png') }}" alt="Logo" class="h-16 w-auto">
+        <aside class="fixed inset-y-0 left-0 z-50 bg-gray-900 transform lg:translate-x-0 overflow-hidden"
+               :class="{
+                   'translate-x-0': sidebarOpen,
+                   '-translate-x-full': !sidebarOpen && sidebarOpen !== 'hover'
+               }"
+               @mouseenter="sidebarCollapsed = false"
+               @mouseleave="sidebarCollapsed = true"
+               :style="{ width: sidebarCollapsed ? '80px' : '256px', transition: 'width 200ms ease-in-out' }">
+            <div class="flex items-center justify-center h-14 bg-gray-800 px-3 flex-shrink-0">
+                <img src="{{ asset('logo/logo_2.png') }}" alt="Logo" class="h-10 w-auto">
             </div>
             
-            <nav class="mt-4 overflow-y-auto" style="max-height: calc(100vh - 72px);">
-                <div class="px-4 space-y-1">
+            <nav class="mt-4 overflow-y-auto" style="max-height: calc(100vh - 56px);">
+                <div class="px-2 space-y-1">
                     <!-- Dashboard -->
                     @if(auth()->user()->role === 'shop_manager')
                     <a href="{{ route('simple-shop.dashboard') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('simple-shop.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors whitespace-nowrap {{ request()->routeIs('simple-shop.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'POSshop' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
-                        POSshop
+                        <span x-show="!sidebarCollapsed" class="text-sm">POSshop</span>
                     </a>
                     @elseif(auth()->user()->role !== 'supplier')
                     <a href="{{ route('dashboard') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('dashboard') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('dashboard') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Dashboard' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
-                        Dashboard
+                        <span x-show="!sidebarCollapsed" class="text-sm">Dashboard</span>
                     </a>
                     @endif
 
                     <!-- POS / New Sale -->
                     @if(!in_array(auth()->user()->role, ['supplier', 'shop_manager']))
                     <a href="{{ route('pos') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('pos') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('pos') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Point of Sale' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        Point of Sale
+                        <span x-show="!sidebarCollapsed" class="text-sm">Point of Sale</span>
                     </a>
                     @endif
 
                     <!-- Sales -->
                     @if(!in_array(auth()->user()->role, ['supplier', 'shop_manager']))
                     <a href="{{ route('sales.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('sales.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('sales.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Sales History' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                         </svg>
-                        Sales History
+                        <span x-show="!sidebarCollapsed" class="text-sm">Sales History</span>
                     </a>
                     @endif
 
                     <!-- Categories (Admin only) -->
                     @if(auth()->user()->role === 'admin')
                     <a href="{{ route('categories.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('categories.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('categories.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Categories' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                         </svg>
-                        Categories
+                        <span x-show="!sidebarCollapsed" class="text-sm">Categories</span>
                     </a>
                     @endif
 
                     <!-- Products (Admin only) -->
                     @if(auth()->user()->role === 'admin')
                     <a href="{{ route('products.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('products.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('products.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Products' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
-                        Products
+                        <span x-show="!sidebarCollapsed" class="text-sm">Products</span>
                     </a>
                     @endif
 
                     <!-- Inventory (Admin or users with inventory permission) -->
                     @if(auth()->user()->role === 'admin' || auth()->user()->can_manage_inventory)
                     <a href="{{ route('inventory.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('inventory.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('inventory.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Inventory' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                         </svg>
-                        Inventory
+                        <span x-show="!sidebarCollapsed" class="text-sm">Inventory</span>
                     </a>
                     @endif
 
                     <!-- Shifts (Admin/Cashier) -->
                     @if(in_array(auth()->user()->role, ['admin', 'cashier']))
                     <a href="{{ route('shifts.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('shifts.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('shifts.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Shifts' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Shifts
+                        <span x-show="!sidebarCollapsed" class="text-sm">Shifts</span>
                     </a>
                     @endif
 
                     <!-- Purchase Orders -->
                     @if(in_array(auth()->user()->role, ['admin', 'cashier', 'supplier']))
                     <a href="{{ route('purchase-orders.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('purchase-orders.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('purchase-orders.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Purchase Orders' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
-                        Purchase Orders
+                        <span x-show="!sidebarCollapsed" class="text-sm">Purchase Orders</span>
                     </a>
                     @endif
 
                     <!-- Expenses (Admin/Cashier) -->
                     @if(in_array(auth()->user()->role, ['admin', 'cashier']))
                     <a href="{{ route('expenses.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('expenses.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('expenses.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Expenses' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        Expenses
+                        <span x-show="!sidebarCollapsed" class="text-sm">Expenses</span>
                     </a>
                     @endif
 
                     @if(auth()->user()->role === 'admin')
                     <!-- Locations (Admin only) -->
                     <a href="{{ route('locations.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('locations.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('locations.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Locations' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        Locations
+                        <span x-show="!sidebarCollapsed" class="text-sm">Locations</span>
                     </a>
 
                     <!-- Reports (Admin only) -->
                     <a href="{{ route('reports.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('reports.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('reports.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Reports' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
-                        Reports
+                        <span x-show="!sidebarCollapsed" class="text-sm">Reports</span>
                     </a>
 
                     <!-- Staff Attendance (Admin only) -->
                     <a href="{{ route('attendance.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('attendance.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('attendance.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Attendance' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Attendance
+                        <span x-show="!sidebarCollapsed" class="text-sm">Attendance</span>
                     </a>
 
                     <!-- Users (Admin only) -->
                     <a href="{{ route('users.index') }}" wire:navigate
-                       class="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('users.*') ? 'bg-gray-800 text-white' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex items-center px-3 py-3 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors {{ request()->routeIs('users.*') ? 'bg-gray-800 text-white' : '' }}"
+                       :title="sidebarCollapsed ? 'Users' : ''">
+                        <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-0': sidebarCollapsed, 'mr-3': !sidebarCollapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
-                        Users
+                        <span x-show="!sidebarCollapsed" class="text-sm">Users</span>
                     </a>
                     @endif
                 </div>
@@ -186,10 +208,11 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col min-h-screen lg:ml-64">
+        <div class="flex-1 flex flex-col min-h-screen"
+             :style="{ marginLeft: isDesktop ? (sidebarCollapsed ? '80px' : '256px') : '0', transition: 'margin-left 200ms ease-in-out' }">
             <!-- Top Navigation -->
             <header class="bg-white shadow-sm border-b border-gray-200">
-                <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center justify-between px-4 h-14">
                     <!-- Mobile menu button -->
                     <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
